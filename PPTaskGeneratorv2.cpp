@@ -40,15 +40,15 @@ public:
 	std::vector<job> myjoblist;	//job list
 	bool lastworker;			//whether this worker is the last one, if so, job will change direction in this worker.
 	void get_a_new_job(job& jb){
-		if (PRINT_MODE){
-			std::cout << "worker:" << workerid << " got a new job " << jb.jobid << " at time " << GlobalTime \
-			<< " is backward " << jb.isbackward << " and trainedtime " << jb.trainedtime << "\n";
-		}
+		// if (PRINT_MODE){
+		// 	std::cout << "worker:" << workerid << " got a new job " << jb.jobid << " at time " << GlobalTime \
+		// 	<< " is backward " << jb.isbackward << " and trainedtime " << jb.trainedtime << "\n";
+		// }
 		myjoblist.push_back(jb);
 	}
 	int parse_job(job& jb){		//if a job is finished in this worker, return jobid, if not, return 0
 		if (PRINT_MODE){
-			std::cout << "worker:" << workerid << " is parsing job " << jb.jobid << " at time " << GlobalTime << "\n";
+			std::cout << "worker:" << workerid << " is parsing job " << jb.jobid << " isbackward: " << jb.isbackward <<" at time " << GlobalTime << "\n";
 		}
 		jb.trainedtime++;
 		if( !jb.isbackward ){//forward calculating.
@@ -69,9 +69,9 @@ public:
 		for(it = myjoblist.begin(); it != myjoblist.end(); it++){
 			//Find whether there is a backward job first.
 			if(it->isbackward && it->arrivedtime <= GlobalTime){
-				if (PRINT_MODE){
-					std::cout << "worker:" << workerid << " found a backward job " << it->jobid << " at time " << GlobalTime << "\n";
-				}
+				// if (PRINT_MODE){
+				// 	std::cout << "worker:" << workerid << " found a backward job " << it->jobid << " at time " << GlobalTime << "\n";
+				// }
 
 				int re = parse_job(*it);
 				if (re != 0){	//one job is finished, pass it to the next worker.
@@ -131,7 +131,7 @@ void PassJob2NextWorker(job& jb, int lastworkerid){
 			}
 		}
 		if(PRINT_MODE){
-			std::cout << "Job " << jb.jobid << " is passed through worker " << lastworkerid \
+			std::cout << "Job " << jb.jobid << " has passed through worker " << lastworkerid \
 					  << " to worker " << it->workerid << " at time " << GlobalTime << "\n";
 		}
 	}
@@ -148,7 +148,7 @@ void PassJob2NextWorker(job& jb, int lastworkerid){
 			}
 		}
 		if(PRINT_MODE){
-			std::cout << "Job " << jb.jobid << " is passed through worker " << lastworkerid \
+			std::cout << "Job " << jb.jobid << " has passed through worker " << lastworkerid \
 					  << " to worker " << it->workerid << " at time " << GlobalTime << "\n";
 		}
 	}
