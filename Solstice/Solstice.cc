@@ -71,7 +71,7 @@ public:
 };
 
 //-----------------------------------Hungary Algorithm---------------------------------------------------------
-bool bpm(int u, std::vector<std::vector<int>>& bpGraph, std::vector<bool>& seen, std::vector<int>& matchR) {
+bool bpm(int u, std::vector<std::vector<int> >& bpGraph, std::vector<bool>& seen, std::vector<int>& matchR) {
     for (int v = 0; v < bpGraph[0].size(); v++) {
         if (bpGraph[u][v] && !seen[v]) {
             seen[v] = true;
@@ -84,7 +84,7 @@ bool bpm(int u, std::vector<std::vector<int>>& bpGraph, std::vector<bool>& seen,
     return false;
 }
 
-int maxBPM(std::vector<std::vector<int>>& bpGraph, std::vector<int>& matchR) {
+int maxBPM(std::vector<std::vector<int> >& bpGraph, std::vector<int>& matchR) {
     int U = bpGraph.size();
     int V = bpGraph[0].size();
     for (int u = 0; u < U; u++) {
@@ -104,7 +104,7 @@ int maxBPM(std::vector<std::vector<int>>& bpGraph, std::vector<int>& matchR) {
 int** MyOswtichHungrayAlgorithm(int** cmatrix, int nodenums){
 	int U = nodenums;
 	int V = nodenums;
-	std::vector<std::vector<int>> bpGraph(U, std::vector<int>(V, 0));
+	std::vector<std::vector<int> > bpGraph(U, std::vector<int>(V, 0));
 	std::vector<int> matchR(V, -1);
     for (int i = 0; i < U; i++) {
         for (int j = 0; j < V; j++) {
