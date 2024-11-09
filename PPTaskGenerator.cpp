@@ -214,12 +214,13 @@ int main(int argc, char* argv[])
 	
 
 	if(OUTPUT_TERMINAL){
-		std::cout << "At_time\t" << "Src\t" << "Des\n";
+		std::cout << "At_stage\t" << "Src\t" << "Des\n";
 	}
 
 	if (OUTPUT_FILE){
 		ofile.open(filename);
-		ofile << "At_time\t" << "Src\t" << "Des\n";
+		//ofile << "At_stage\t" << "Src\t" << "Des\n";
+		//ofile << simulatetime << '\n';
 	}
 	
 
@@ -246,6 +247,7 @@ int main(int argc, char* argv[])
 		GlobalTime++;
 	}
 	if (OUTPUT_FILE){
+		ofile << -1 <<'\n';
 		ofile.close();
 	}
 	return 0;
