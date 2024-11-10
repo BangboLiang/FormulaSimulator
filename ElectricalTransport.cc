@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <vector>
 
 #define PRINT_MODE 1 //1 for debugging
 
@@ -41,6 +42,7 @@ class Job
 {
 public:
     Connection con;
+    bool connected;
     double bytes_remaining;
     int parse()
     {
@@ -68,10 +70,21 @@ public:
     double bytes;
 };
 
+struct FileJob
+{
+    int stage;
+    int src;
+    int des;
+};
+
+
 //Global variables
 Node nodes[100];
-Job runningjobs[100];
+std::vector<Job> runningjobs;
 PipelineWorkElement ppworks[1000];
+std::vector<FileJob> filejbs;
+double CommunicationTime;
+
 
 double ConnectionGetThroughput(int srcid, int desid, int srclink, int deslink)
 {
@@ -88,34 +101,89 @@ double ConnectionGetThroughput(int srcid, int desid, int srclink, int deslink)
 }
 
 
-void ReadFromFile(std::string file_name)
+int ReadFromFile(std::string file_name)
 {
     std::ifstream ifile;
     ifile.open(file_name);
-    int stagenum;
-    ifile >> stagenum;
     if (PRINT_MODE)
     {
-        std::cout << "Readfile stagenums: " << stagenum << '\n';
+        std::cout << "Reading file: " << file_name << '\n';
     }
+    int tmpstage;
+    int tmpsrc;
+    int tmpdes;
+    int totalstages = 0;
 
-    for (int i = 0; i < stagenum; i++)
+    while (1)
     {
-        /* code */
+        ifile >> tmpstage;
+        if (tmpstage == -1)
+        {
+            break;
+        }
+        if (tmpstage > totalstages)
+        {
+            totalstages = tmpstage;
+        }
+        
+        ifile >> tmpsrc >> tmpdes;
+        FileJob tmpfjb;
+        tmpfjb.stage = tmpstage;
+        tmpfjb.src = tmpsrc;
+        tmpfjb.des = tmpdes;
+        filejbs.push_back(tmpfjb);
+    }
+    return totalstages;
+}
+
+void ParseAllRunningJobs()
+{
+    std::vector<Job>::iterator it = runningjobs.begin();
+    while (it != runningjobs.end())
+    {
+        if (it->connected == false)
+        {
+            
+        }
+        
     }
     
-
-    
 }
 
-
-void SimulateByStage()
+void SimulateByStage(int total_stage)
 {
+    int CurrentStage = 1;
+    while (CurrentStage <= total_stage)
+    {
+        //fetch jobs
+        std::vector<FileJob>::iterator it;
+        for (it= filejbs.begin(); it != filejbs.end();)
+        {
+            if (it->stage == CurrentStage) 
+            {//Put the job into running jobs
+                Job tmpjb;
+                tmpjb.connected = false;
+                tmpjb.con.srcid = it->src;
+                tmpjb.con.desid = it->des;
+                runningjobs.push_back(tmpjb);
+                it = filejbs.erase(it);
+            }
+            else{
+                ++it;
+            }
+        }
+    }
     
 }
+
 
 int main(int argc, char const *argv[])
 {
-    /* code */
+    CommunicationTime = 0;
+    std::string filename;
+    filename = "PPTaskGenResult.txt";
+    int total_Stage = ReadFromFile(filename);
+    SimulateByStage(total_Stage);
+
     return 0;
 }
