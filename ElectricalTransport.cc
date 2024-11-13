@@ -35,25 +35,26 @@ public:
     Link mylinks[10];
     int SetNewConnection()
     {
-		std::cout << "Node " << Nodeid << " is setting connection.\n";
-        //Find a link which capacity is highest.
-        double maxcapacity = 0;
+		//std::cout << "Node " << Nodeid << " is setting connection.\n";
+        //Find a link which jobnum is lowest.
+        double maxjobnum = 0xffffffff;
         int result = 0;
         for (int i = 0; i < linknum; i++)
         {
-            if (mylinks[i].get_curr_band() > maxcapacity)
+            if (mylinks[i].jobnums < maxjobnum)
             {
-                maxcapacity = mylinks[i].get_curr_band();
+                maxjobnum = mylinks[i].jobnums;
                 result = i;
             }
         }
         mylinks[result].jobnums++;
-		std::cout << "Node " << Nodeid << " got a new connection ont link:" << result <<"\n";
+		//std::cout << "Node " << Nodeid << " got a new connection on link:" << result <<"\n";
         return result;
     }
     void RemOldConnection(int tlinknum)
     {
         mylinks[tlinknum].jobnums--;
+		//std::cout << "Node " << Nodeid << " deleted an old connection on link:" << tlinknum <<"\n";
     }
 };
 
@@ -75,6 +76,8 @@ class Job
 public:
     Connection con;
     bool connected;
+	int jobid;
+	double start_time;
     double bytes_remaining;
     int parse()
     {
@@ -117,10 +120,12 @@ std::vector<Job> runningjobs;
 PipelineWorkElement ppworks[1000];
 std::vector<FileJob> filejbs;
 double CommunicationTime;
+int totaljobnum;
+std::vector<double> job_finish_times; // Use this to calculate job average finish time.
 
 void JobCreateConnection(Job &jb)
 {
-	std::cout << "running JobCreateConnection.\n";
+	//std::cout << "running JobCreateConnection.\n";
     int srcidx = jb.con.srcid;
     int desidx = jb.con.desid;
     int tsrclink = nodes[srcidx].SetNewConnection();
@@ -128,7 +133,8 @@ void JobCreateConnection(Job &jb)
     jb.con.srclink = tsrclink;
     jb.con.deslink = tdeslink;
     jb.connected = true;
-	std::cout << "Job connection established, src " << jb.con.srcid << " des " << jb.con.desid << '\n';
+	jb.start_time = CommunicationTime;
+	std::cout << "Job "<<jb.jobid <<"'s connection established, src " << jb.con.srcid << " link " << jb.con.srclink << " des " << jb.con.desid << " link " << jb.con.deslink << '\n';
 }
 
 
@@ -184,15 +190,31 @@ int ReadFromFile(std::string file_name)
 
 void ParseAllRunningJobs()
 {
-	std::cout << "Running ParseAllRunningJobs\n";
+	//std::cout << "Running ParseAllRunningJobs\n";
     std::vector<Job>::iterator it = runningjobs.begin();
-    while (it != runningjobs.end())
-    {
-        if (it->connected == false)
+	//establish connections for unconnected jobs
+	while(it != runningjobs.end())
+	{
+		if (it->connected == false)
         {
-			std::cout << "Trying to create a connection for job.\n";
+			//std::cout << "Trying to create a connection for job.\n";
             JobCreateConnection(*it);
         }
+		it++;
+	}
+	/*
+		Communication time should increase after the job parsing finish,
+		but I put this sentence here for recording job finish time easily.
+	*/
+	CommunicationTime++;
+	it = runningjobs.begin();
+    while (it != runningjobs.end())
+    {
+        // if (it->connected == false)
+        // {
+		// 	std::cout << "Trying to create a connection for job.\n";
+        //     JobCreateConnection(*it);
+        // }
         int parse_result = it->parse();
         if (parse_result)
         {//This job is finished.
@@ -200,22 +222,26 @@ void ParseAllRunningJobs()
             nodes[it->con.desid].RemOldConnection(it->con.deslink);
             if (PRINT_MODE)
             {
-                std::cout << "Job is finished, src " << it->con.srcid << " link " << it->con.srclink \
+                std::cout << "Job " << it->jobid << " is finished, src " << it->con.srcid << " link " << it->con.srclink \
                 << " des " << it->con.desid << " link " << it->con.deslink << '\n';
             }
+			std::cout << "job " << it->jobid << "'s finish time: " << CommunicationTime - it->start_time << '\n';
+			job_finish_times.push_back(CommunicationTime - it->start_time);
             it = runningjobs.erase(it);
         }
         else
         {//This job is not finished.
             if (PRINT_MODE)
             {
-                std::cout << "Job is not finished, src " << it->con.srcid << " link " << it->con.srclink \
+                std::cout << "Job " << it->jobid << " is not finished, src " << it->con.srcid << " link " << it->con.srclink \
                 << " des " << it->con.desid << " link " << it->con.deslink << " Bytes remaining: " \
                 << it->bytes_remaining << '\n';
             }
+			it++;
         }
-        CommunicationTime++;
     }
+	
+	std::cout << "Communication time now : " << CommunicationTime << "\n" ;
 }
 
 void SimulateByStage(int total_stage)
@@ -238,9 +264,10 @@ void SimulateByStage(int total_stage)
                 tmpjb.con.srcid = it->src;
                 tmpjb.con.desid = it->des;
 				tmpjb.bytes_remaining = JOB_BYTESIZE;
+				tmpjb.jobid = totaljobnum++;
                 runningjobs.push_back(tmpjb);
                 it = filejbs.erase(it);
-				std::cout << "push backed a job.\n";
+				//std::cout << "push backed a job.\n";
             }
             else{
                 ++it;
@@ -270,6 +297,7 @@ void Nodesinit()
 
 int main(int argc, char const *argv[])
 {
+	totaljobnum = 0;
     Nodesinit();
     CommunicationTime = 0;
     std::string filename;
@@ -277,5 +305,15 @@ int main(int argc, char const *argv[])
     int total_Stage = ReadFromFile(filename);
     SimulateByStage(total_Stage);
     std::cout << "Communication Time: " << CommunicationTime << '\n';
+	//Get job average finish time
+	double joballtime = 0;
+	std::vector<double>::iterator it = job_finish_times.begin();
+	while (it != job_finish_times.end())
+	{
+		joballtime += *it;
+		it++;
+	}
+	double averagefinishtime = joballtime / totaljobnum;
+	std::cout << "Job average finish time: " << averagefinishtime << '\n';
     return 0;
 }
