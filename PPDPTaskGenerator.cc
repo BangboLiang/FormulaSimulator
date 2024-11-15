@@ -13,6 +13,7 @@ int workernum = 4;
 int forwardtime = 1;
 int backwardtime = 2;
 int batchsize = 4;
+int bucketsize = 4;
 int simulatetime = 100;
 
 
