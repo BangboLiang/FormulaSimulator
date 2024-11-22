@@ -5,7 +5,7 @@
 
 #define PRINT_MODE 1 //1 for debugging
 #define NODE_LINK_NUM 2
-#define LINK_CAPACITY 1
+#define LINK_CAPACITY 400
 #define JOB_BYTESIZE 2
 
 double ConnectionGetThroughput(int srcid, int desid, int srclink, int deslink);
@@ -91,6 +91,7 @@ public:
         bytes_remaining = bytes_remaining - cost;
         if (bytes_remaining <= 0)
         {
+            std::cout << "Job " << jobid << " byte remaining:" << bytes_remaining << '\n';
             return 1;
         }
         return 0;
@@ -111,6 +112,7 @@ struct FileJob
     int stage;
     int src;
     int des;
+    double jobbytes;
 };
 
 
@@ -183,6 +185,43 @@ int ReadFromFile(std::string file_name)
         tmpfjb.stage = tmpstage;
         tmpfjb.src = tmpsrc;
         tmpfjb.des = tmpdes;
+        filejbs.push_back(tmpfjb);
+    }
+    return totalstages;
+}
+
+int readFromJobFile(std::string file_name)
+{
+    std::ifstream ifile;
+    ifile.open(file_name);
+    if (PRINT_MODE)
+    {
+        std::cout << "Reading file: " << file_name << '\n';
+    }
+    int tmpstage;
+    int tmpsrc;
+    int tmpdes;
+    double tmpbyte;
+    int totalstages = 0;
+    while (1)
+    {
+        ifile >> tmpstage;
+        if (tmpstage == -1)
+        {
+            break;
+        }
+        if (tmpstage > totalstages)
+        {
+            totalstages = tmpstage;
+        }
+        
+        ifile >> tmpsrc >> tmpdes >> tmpbyte;
+        std::cout << "Read: " << tmpsrc << ' ' << tmpdes << ' ' << tmpbyte << '\n';
+        FileJob tmpfjb;
+        tmpfjb.stage = tmpstage;
+        tmpfjb.src = tmpsrc;
+        tmpfjb.des = tmpdes;
+        tmpfjb.jobbytes = tmpbyte;
         filejbs.push_back(tmpfjb);
     }
     return totalstages;
@@ -263,7 +302,8 @@ void SimulateByStage(int total_stage)
                 tmpjb.connected = false;
                 tmpjb.con.srcid = it->src;
                 tmpjb.con.desid = it->des;
-				tmpjb.bytes_remaining = JOB_BYTESIZE;
+				//tmpjb.bytes_remaining = JOB_BYTESIZE;
+                tmpjb.bytes_remaining = it->jobbytes;
 				tmpjb.jobid = totaljobnum++;
                 runningjobs.push_back(tmpjb);
                 it = filejbs.erase(it);
@@ -301,8 +341,8 @@ int main(int argc, char const *argv[])
     Nodesinit();
     CommunicationTime = 0;
     std::string filename;
-    filename = "./PPTaskGenResult.txt";
-    int total_Stage = ReadFromFile(filename);
+    filename = "./MoEtask.txt";
+    int total_Stage = readFromJobFile(filename);
     SimulateByStage(total_Stage);
     std::cout << "Communication Time: " << CommunicationTime << '\n';
 	//Get job average finish time

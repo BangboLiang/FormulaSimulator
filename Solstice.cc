@@ -192,6 +192,7 @@ public:
 	}
 
 	void display() {
+		int total_times = 0;
 		cout << "There are " << duration_nums << " duration nums:\n";
 		for (int i = 0; i < duration_nums; i++){
 			cout << "The number " << i << " st/nd/th duation is:\n";
@@ -202,6 +203,7 @@ public:
 				cout << '\n';
 			}
 			cout << "This configure's duration is " << duration_time[i] << " ns.\n";
+			total_times += duration_time[i];
 		}
 		
 		cout << "And the Packet demand matrix is:\n";
@@ -211,6 +213,8 @@ public:
 			}
 			cout << '\n';
 		}
+		cout << "Total duration time is: " << total_times << '\n';
+		cout << "And reconfigure " << duration_nums << " times.\n";
 	}
 
 };
