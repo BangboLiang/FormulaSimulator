@@ -32,8 +32,9 @@ class Node
 public:
     int Nodeid;
     int linknum;
-    Link mylinks[10];
-    int SetNewConnection()
+    Link myingresslinks[10];
+    Link myegresslinks[10];
+    int SetIngressNewConnection()
     {
 		//std::cout << "Node " << Nodeid << " is setting connection.\n";
         //Find a link which jobnum is lowest.
@@ -41,21 +42,50 @@ public:
         int result = 0;
         for (int i = 0; i < linknum; i++)
         {
-            if (mylinks[i].jobnums < maxjobnum)
+            if (myingresslinks[i].jobnums < maxjobnum)
             {
-                maxjobnum = mylinks[i].jobnums;
+                maxjobnum = myingresslinks[i].jobnums;
                 result = i;
             }
         }
-        mylinks[result].jobnums++;
+        myingresslinks[result].jobnums++;
 		//std::cout << "Node " << Nodeid << " got a new connection on link:" << result <<"\n";
         return result;
     }
-    void RemOldConnection(int tlinknum)
+
+    int SetEgressNewConnection()
     {
-        mylinks[tlinknum].jobnums--;
+        //std::cout << "Node " << Nodeid << " is setting connection.\n";
+        //Find a link which jobnum is lowest.
+        double maxjobnum = 0xffffffff;
+        int result = 0;
+        for (int i = 0; i < linknum; i++)
+        {
+            if (myegresslinks[i].jobnums < maxjobnum)
+            {
+                maxjobnum = myegresslinks[i].jobnums;
+                result = i;
+            }
+        }
+        myegresslinks[result].jobnums++;
+		//std::cout << "Node " << Nodeid << " got a new connection on link:" << result <<"\n";
+        return result;
+    }
+
+
+
+    void RemIngressOldConnection(int tlinknum)
+    {
+        myingresslinks[tlinknum].jobnums--;
 		//std::cout << "Node " << Nodeid << " deleted an old connection on link:" << tlinknum <<"\n";
     }
+    void RemEgressOldConnection(int tlinknum)
+    {
+        myegresslinks[tlinknum].jobnums--;
+		//std::cout << "Node " << Nodeid << " deleted an old connection on link:" << tlinknum <<"\n";
+    }
+
+
 };
 
 class Connection
@@ -130,8 +160,8 @@ void JobCreateConnection(Job &jb)
 	//std::cout << "running JobCreateConnection.\n";
     int srcidx = jb.con.srcid;
     int desidx = jb.con.desid;
-    int tsrclink = nodes[srcidx].SetNewConnection();
-    int tdeslink = nodes[desidx].SetNewConnection();
+    int tsrclink = nodes[srcidx].SetEgressNewConnection();
+    int tdeslink = nodes[desidx].SetIngressNewConnection();
     jb.con.srclink = tsrclink;
     jb.con.deslink = tdeslink;
     jb.connected = true;
@@ -142,8 +172,8 @@ void JobCreateConnection(Job &jb)
 
 double ConnectionGetThroughput(int srcid, int desid, int srclink, int deslink)
 {
-    double srcbd = nodes[srcid].mylinks[srclink].get_curr_band();
-    double desbd = nodes[desid].mylinks[deslink].get_curr_band();
+    double srcbd = nodes[srcid].myegresslinks[srclink].get_curr_band();
+    double desbd = nodes[desid].myingresslinks[deslink].get_curr_band();
     if (srcbd <= desbd)
     {
         return srcbd;
@@ -257,8 +287,8 @@ void ParseAllRunningJobs()
         int parse_result = it->parse();
         if (parse_result)
         {//This job is finished.
-            nodes[it->con.srcid].RemOldConnection(it->con.srclink);
-            nodes[it->con.desid].RemOldConnection(it->con.deslink);
+            nodes[it->con.srcid].RemEgressOldConnection(it->con.srclink);
+            nodes[it->con.desid].RemIngressOldConnection(it->con.deslink);
             if (PRINT_MODE)
             {
                 std::cout << "Job " << it->jobid << " is finished, src " << it->con.srcid << " link " << it->con.srclink \
@@ -329,8 +359,10 @@ void Nodesinit()
         nodes[i].Nodeid = i;
 		for (int j = 0; j < 10; j++)
 		{
-			nodes[i].mylinks[j].jobnums = 0;
-			nodes[i].mylinks[j].capacity = LINK_CAPACITY;
+			nodes[i].myingresslinks[j].jobnums = 0;
+			nodes[i].myingresslinks[j].capacity = LINK_CAPACITY;
+            nodes[i].myegresslinks[j].jobnums = 0;
+			nodes[i].myegresslinks[j].capacity = LINK_CAPACITY;
 		}
     }
 }

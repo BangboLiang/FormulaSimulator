@@ -11,10 +11,10 @@ LIB_PATH = ~/or-tools_x86_64_Ubuntu-22.04_cpp_v9.11.4210/lib/
 LIBS = -lortools
 
 #targets
-TARGETS = OpticalSolution ElectricalTransport PPTaskGenerator Solstice Convert
+TARGETS = OpticalSolution ElectricalTransport PPTaskGenerator Solstice Convert ElectricalTransport2
 
 #sources
-SRCS = OpticalSolution.cc ElectricalTransport.cc PPTaskGenerator.cc Solstice.cc Convert.cc
+SRCS = OpticalSolution.cc ElectricalTransport.cc PPTaskGenerator.cc Solstice.cc Convert.cc ElectricalTransport2.cc
 
 all: $(TARGETS)
 

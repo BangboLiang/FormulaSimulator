@@ -76,7 +76,8 @@ int main(int argc, char const *argv[])
             {
                 if (j == (*it)[i])
                 {
-                    constraint_coeffs[index][i][j] = 1 ;
+                    //constraint_coeffs[index][i][j] = 1 ;
+                    constraint_coeffs[index][i][j] = 400; //400KB/us == 400GB/s
                 }
                 else
                 {

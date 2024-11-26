@@ -2,6 +2,7 @@
 *.out
 PPTaskGenerator
 ElectricalTransport
+ElectricalTransport2
 Solstice
 Convert
 OpticalSolution
