@@ -373,7 +373,7 @@ int main(int argc, char const *argv[])
     Nodesinit();
     CommunicationTime = 0;
     std::string filename;
-    filename = "./MoEtask2.txt";
+    filename = "./FullDuplex.txt";
     int total_Stage = readFromJobFile(filename);
     SimulateByStage(total_Stage);
     std::cout << "Communication Time: " << CommunicationTime << '\n';
