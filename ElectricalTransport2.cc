@@ -5,7 +5,7 @@
 
 #define PRINT_MODE 0 //1 for debugging
 #define NODE_LINK_NUM 2
-#define LINK_CAPACITY 400
+#define LINK_CAPACITY 50
 #define JOB_BYTESIZE 2
 
 double ConnectionGetThroughput(int srcid, int desid, int srclink, int deslink);
@@ -373,7 +373,7 @@ int main(int argc, char const *argv[])
     Nodesinit();
     CommunicationTime = 0;
     std::string filename;
-    filename = "./FullDuplex.txt";
+    filename = "./MoEtask2.txt";
     int total_Stage = readFromJobFile(filename);
     SimulateByStage(total_Stage);
     std::cout << "Communication Time: " << CommunicationTime << '\n';
